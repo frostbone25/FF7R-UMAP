@@ -13,11 +13,29 @@ This is a lengthy process as it has to search through each actor in a level, and
 
 Once the map extraction is complete, a .json text file will be generated. This is an intermediate document that holds references to the actors in the scene, as well as the meshes/materials/textures used along with any light actors.
 
+![console1](Screenshots/console1.png)
+
+![console2](Screenshots/console2.png)
+
 ## Part 2 - Map Assembly (Unity Project)
 
-***NOTE: In the future this will be handled in the console app for simplicity. The map will be extracted and then assembled into an internal scene file using [Assimp.NET](https://github.com/StirlingLabs/Assimp.Net) library and exported into an fbx or gltf / glb that you can open in Blender or any other 3D software/game engine package. For prototyping the inital early version of this map extractor I am using Unity.***
+***NOTE: In the future this will be handled in the console app for simplicity. The map will be extracted and then assembled into an internal scene file using [Assimp.NET](https://github.com/StirlingLabs/Assimp.Net) library and exported into an fbx or gltf / glb that you can open in Blender or any other 3D software/game engine package. For prototyping the inital early version of this map extractor I am using [Unity](https://unity.com/).***
 
-The second part to the app is re-assembling the map based on what we extracted using that .json file as the base. You can create *(or open the template Unity Project in the repository)* and opening the editor script through the menus.
+The second part to the app is re-assembling the map based on what we extracted using that .json file as the base. Create a blank unity project and drag the editor script here into your Unity Assets folder for your created project.
+
+![unity1](Screenshots/unity1.png)
+
+![unity2](Screenshots/unity2.png)
+
+## Screenshots
+
+![unity3](Screenshots/unity3.jpg)
+
+![unity4](Screenshots/unity4.jpg)
+
+![unity5](Screenshots/unity5.png)
+
+![unity6](Screenshots/unity6.png)
 
 ### Credits / Sources
 
