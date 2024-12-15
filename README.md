@@ -37,6 +37,10 @@ The second part to the app is re-assembling the map based on what we extracted u
 
 ![unity6](Screenshots/unity6.png)
 
+## Issues / Bugs
+
+If there are any issues please report them [on github here on the repository](https://github.com/frostbone25/FF7R-UMAP/issues).
+
 ### Credits / Sources
 
 - [MinshuG's BlenderUmap2 Blender Addon](https://github.com/MinshuG/BlenderUmap2)
