@@ -52,15 +52,18 @@ namespace UMapExporter
 {
     public class Program
     {
+        private static string gamePaksPath = "";
         //private static string gamePaksPath = "D:/SteamLibrary/steamapps/common/FINAL FANTASY VII REMAKE";
-        private static string gamePaksPath = "D:/SteamLibrary/steamapps/common/FINAL FANTASY VII REMAKE/End/Content/Paks";
+        //private static string gamePaksPath = "D:/SteamLibrary/steamapps/common/FINAL FANTASY VII REMAKE/End/Content/Paks";
         private static string encryptionKey = "0x23989837645C9D28BA58072B2076E895B853A7C9E1C5591B814C4FD2A2D7B782"; //aes encryption key for game pak archives
         private static string unrealEngineMappingFilePath = "D:/Applications/app-unreal-fmodel-4-4-4/FF7R.usmap"; //mappings file location
-        private static string outputPath = "J:/ff7r/my-umap-exporter-output";
+        //private static string outputPath = "J:/ff7r/my-umap-exporter-output";
+        private static string outputPath = "";
         //private static EGame gameVersion = EGame.GAME_UE4_18;
         private static EGame gameVersion = EGame.GAME_FinalFantasy7Remake;
 
         //package path for given asset in pak files
+        private static string gameUmapPackagePath = "";
         //private static string gameUmapPackagePath = "End/Content/GameContents/Level/Game/Field/010-MAKO1/010-MAKO1_All.umap"; 
         //private static string gameUmapPackagePath = "End/Content/GameContents/Level/Game/Field/010-MAKO1/010-MAKO1_CharaSpec.umap"; 
         //private static string gameUmapPackagePath = "End/Content/GameContents/Level/Game/Field/010-MAKO1/010-MAKO1_Layout.umap"; 
@@ -90,7 +93,7 @@ namespace UMapExporter
         //private static string gameUmapPackagePath = "End/Content/GameContents/Level/Game/Field/010-MAKO1/Layout_Merge/010-MAKO1_Layout_050-Stair_Lighting.umap"; 
         //private static string gameUmapPackagePath = "End/Content/GameContents/Level/Game/Field/010-MAKO1/Layout_Merge/010-MAKO1_Layout_070-DeepBattle1.umap"; 
         //private static string gameUmapPackagePath = "End/Content/GameContents/Level/Game/Field/010-MAKO1/Layout_Merge/010-MAKO1_Layout_070-DeepBattle1_Lighting.umap"; 
-        private static string gameUmapPackagePath = "end/content/gamecontents/level/game/field/080-slu5b/layout_merge/080-slu5b_layout_120-aerithhouse.umap";
+        //private static string gameUmapPackagePath = "end/content/gamecontents/level/game/field/080-slu5b/layout_merge/080-slu5b_layout_120-aerithhouse.umap";
         //private static string gameUmapPackagePath = "end/content/gamecontents/level/game/field/080-slu5b/layout_merge/080-slu5b_layout_120-aerithhouse_lighting.umap"; 
         //private static string gameUmapPackagePath = "End/Content/GameContents/Level/Game/Field/080-SLU5B/Layout_Merge/080-SLU5B_Layout_180-AerithHouseRockFar.umap";
         //private static string gameUmapPackagePath = "End/Content/GameContents/Level/Game/Field/080-SLU5B/Layout_Merge/080-SLU5B_Layout_180-AerithHouseRockFar_Lighting.umap"; 
@@ -276,6 +279,9 @@ namespace UMapExporter
         private static bool convertPBRMapToUnityURP = false;
         private static bool convertPBRMapToUnityBIRP = false;
 
+        private static int userAppModeIndex = -1;
+        private static bool mode_listUmaps;
+
         //level options
         //public float levelScale = 0.01f;
         //public float lightIntensityScale = 0.0001f;
@@ -297,9 +303,366 @@ namespace UMapExporter
             return umapFilesInGame.ToArray();
         }
 
+        public static bool IsGamePakPathValid(string path)
+        {
+            if (string.IsNullOrEmpty(path) || string.IsNullOrWhiteSpace(path))
+            {
+                ConsoleWriter.WriteErrorLine("pasted path string is null/empty/whitespace, please paste in the path correctly.");
+                return false;
+            }
+
+            if (Directory.Exists(path) == false)
+            {
+                ConsoleWriter.WriteErrorLine("Game Pak Path does not exist!");
+                return false;
+            }
+
+            string[] filesInDirectory = Directory.GetFiles(path);
+
+            for (int i = 0; i < filesInDirectory.Length; i++)
+            {
+                if (Path.GetExtension(filesInDirectory[i]) == ".pak")
+                    return true;
+            }
+
+            ConsoleWriter.WriteErrorLine("Game Pak Path does have pak files!");
+            return false;
+        }
+
+        public static bool IsOutputPathValid(string path)
+        {
+            if (string.IsNullOrEmpty(path) || string.IsNullOrWhiteSpace(path))
+            {
+                ConsoleWriter.WriteErrorLine("pasted path string is null/empty/whitespace, please paste in the path correctly.");
+                return false;
+            }
+
+            if (Directory.Exists(path) == false)
+            {
+                ConsoleWriter.WriteErrorLine("Output Path does not exist!");
+                return false;
+            }
+
+            return true;
+        }
+
         static void Main(string[] args)
         {
             Console.Clear();
+
+            //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 1 MODE SELECTION ||||||||||||||||||||||||||||||||||||
+            //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 1 MODE SELECTION ||||||||||||||||||||||||||||||||||||
+            //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 1 MODE SELECTION ||||||||||||||||||||||||||||||||||||
+
+            ConsoleWriter.WriteLine("FF7R UMAP Extractor");
+
+            while(userAppModeIndex != 0 || userAppModeIndex != 1)
+            {
+                ConsoleWriter.WriteLine("(1/15) Type in 0 for Map Extraction Mode, or Type in 1 for Listing all .umap file paths.");
+
+                if(int.TryParse(Console.ReadLine(), out int parsedValue))
+                {
+                    if(parsedValue == 0 || parsedValue == 1)
+                    {
+                        userAppModeIndex = parsedValue;
+
+                        if (userAppModeIndex == 0)
+                        {
+                            mode_listUmaps = false;
+                            ConsoleWriter.WriteInfoLine("Map Extraction Mode Selected!");
+                        }
+                        else
+                        {
+                            mode_listUmaps = true;
+                            ConsoleWriter.WriteInfoLine("Game UMAP Listing Mode Selected!");
+                        }
+
+                        break;
+                    }
+                    else
+                    {
+                        ConsoleWriter.WriteErrorLine("WRITE EITHER 0 OR 1 TO SELECT THE CORESPONDING MODE!");
+                    }
+                }
+                else
+                {
+                    ConsoleWriter.WriteErrorLine("WRITE EITHER 0 OR 1 TO SELECT THE CORESPONDING MODE!");
+                }
+            }
+
+            //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 2 GAME PAK FILE PATH ||||||||||||||||||||||||||||||||||||
+            //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 2 GAME PAK FILE PATH ||||||||||||||||||||||||||||||||||||
+            //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 2 GAME PAK FILE PATH ||||||||||||||||||||||||||||||||||||
+
+            while (Directory.Exists(gamePaksPath) == false)
+            {
+                ConsoleWriter.WriteLine("(2/15) Enter/paste the path to the game pak files...");
+                string userGamePaksPath = Console.ReadLine();
+
+                if (IsGamePakPathValid(userGamePaksPath))
+                {
+                    gamePaksPath = userGamePaksPath;
+                    ConsoleWriter.WriteInfoLine(string.Format("Pak Path Valid! {0}", gamePaksPath));
+                    break;
+                }
+            }
+
+            //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 3 OUTPUT FILE PATH ||||||||||||||||||||||||||||||||||||
+            //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 3 OUTPUT FILE PATH ||||||||||||||||||||||||||||||||||||
+            //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 3 OUTPUT FILE PATH ||||||||||||||||||||||||||||||||||||
+
+            while (Directory.Exists(outputPath) == false)
+            {
+                ConsoleWriter.WriteLine("(3/15) Enter/paste the path to the output folder/directory where files will be exported to...");
+                string userOutputPath = Console.ReadLine();
+
+                if (IsOutputPathValid(userOutputPath))
+                {
+                    outputPath = userOutputPath;
+                    ConsoleWriter.WriteInfoLine(string.Format("Output Path Valid! {0}", outputPath));
+                    break;
+                }
+            }
+
+            if(!mode_listUmaps)
+            {
+
+                //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 4 GAME UMAP PACKAGE PATH ||||||||||||||||||||||||||||||||||||
+                //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 4 GAME UMAP PACKAGE PATH ||||||||||||||||||||||||||||||||||||
+                //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 4 GAME UMAP PACKAGE PATH ||||||||||||||||||||||||||||||||||||
+
+                while (string.IsNullOrEmpty(gameUmapPackagePath) || string.IsNullOrWhiteSpace(gameUmapPackagePath))
+                {
+                    ConsoleWriter.WriteLine("(4/15) Enter/paste the path of the umap level to extract...");
+                    string userGameUmapPackagePath = Console.ReadLine();
+
+                    if (string.IsNullOrEmpty(userGameUmapPackagePath) == false || string.IsNullOrWhiteSpace(userGameUmapPackagePath) == false)
+                    {
+                        gameUmapPackagePath = userGameUmapPackagePath;
+                        ConsoleWriter.WriteInfoLine(string.Format("Game Umap Package Path Set! {0}", gameUmapPackagePath));
+                        break;
+                    }
+                    else
+                    {
+                        ConsoleWriter.WriteErrorLine("The path you entered is empty/null! {0}");
+                    }
+                }
+
+                //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 5 EXTRACT LIGHTS ||||||||||||||||||||||||||||||||||||
+                //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 5 EXTRACT LIGHTS ||||||||||||||||||||||||||||||||||||
+                //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 5 EXTRACT LIGHTS ||||||||||||||||||||||||||||||||||||
+
+                ConsoleWriter.WriteLine("(5/15) Extract Lights?");
+                ConsoleWriter.WriteLine("If YES hit enter now (leave the field empty)");
+                ConsoleWriter.WriteLine("If NO then type in 0");
+                string userExtractLights = Console.ReadLine();
+
+                if (string.IsNullOrEmpty(userExtractLights) || string.IsNullOrWhiteSpace(userExtractLights))
+                    extractLights = true;
+                else
+                    extractLights = false;
+
+                ConsoleWriter.WriteInfoLine(string.Format("Extract Lights: {0}", extractLights));
+
+                //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 6 EXTRACT MESHES ||||||||||||||||||||||||||||||||||||
+                //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 6 EXTRACT MESHES ||||||||||||||||||||||||||||||||||||
+                //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 6 EXTRACT MESHES ||||||||||||||||||||||||||||||||||||
+
+                ConsoleWriter.WriteLine("(6/15) Extract Meshes?");
+                ConsoleWriter.WriteLine("If YES hit enter now (leave the field empty)");
+                ConsoleWriter.WriteLine("If NO then type in 0");
+                string userExtractMeshes = Console.ReadLine();
+
+                if (string.IsNullOrEmpty(userExtractMeshes) || string.IsNullOrWhiteSpace(userExtractMeshes))
+                    extractMeshes = true;
+                else
+                    extractMeshes = false;
+
+                ConsoleWriter.WriteInfoLine(string.Format("Extract Meshes: {0}", extractMeshes));
+
+                //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 7 EXTRACT TEXTURES ||||||||||||||||||||||||||||||||||||
+                //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 7 EXTRACT TEXTURES ||||||||||||||||||||||||||||||||||||
+                //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 7 EXTRACT TEXTURES ||||||||||||||||||||||||||||||||||||
+
+                ConsoleWriter.WriteLine("(7/15) Extract Textures?");
+                ConsoleWriter.WriteLine("If YES hit enter now (leave the field empty)");
+                ConsoleWriter.WriteLine("If NO then type in 0");
+                string userExtractTextures = Console.ReadLine();
+
+                if (string.IsNullOrEmpty(userExtractTextures) || string.IsNullOrWhiteSpace(userExtractTextures))
+                    extractTextures = true;
+                else
+                    extractTextures = false;
+
+                ConsoleWriter.WriteInfoLine(string.Format("Extract Textures: {0}", extractTextures));
+
+                //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 8 OVERWRITE EXTRACT TEXTURES ||||||||||||||||||||||||||||||||||||
+                //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 8 OVERWRITE EXTRACT TEXTURES ||||||||||||||||||||||||||||||||||||
+                //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 8 OVERWRITE EXTRACT TEXTURES ||||||||||||||||||||||||||||||||||||
+
+                ConsoleWriter.WriteLine("(8/15) Overwite Existing Textures during Extraction? (If there is the same texture that has been extracted prior, should we overwrite it?)");
+                ConsoleWriter.WriteLine("If YES hit enter now (leave the field empty)");
+                ConsoleWriter.WriteLine("If NO then type in 0");
+                string userOverwriteExtractTextures = Console.ReadLine();
+
+                if (string.IsNullOrEmpty(userOverwriteExtractTextures) || string.IsNullOrWhiteSpace(userOverwriteExtractTextures))
+                    overwriteExtractedTextures = true;
+                else
+                    overwriteExtractedTextures = false;
+
+                ConsoleWriter.WriteInfoLine(string.Format("Overwrite Extract Textures: {0}", overwriteExtractedTextures));
+
+                //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 9 CONVERT TEXTURES ||||||||||||||||||||||||||||||||||||
+                //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 9 CONVERT TEXTURES ||||||||||||||||||||||||||||||||||||
+                //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 9 CONVERT TEXTURES ||||||||||||||||||||||||||||||||||||
+
+                ConsoleWriter.WriteLine("(9/15) Convert Texture After Extraction?");
+                ConsoleWriter.WriteLine("If YES hit enter now (leave the field empty)");
+                ConsoleWriter.WriteLine("If NO then type in 0");
+                string userConvertTextures = Console.ReadLine();
+
+                if (string.IsNullOrEmpty(userConvertTextures) || string.IsNullOrWhiteSpace(userConvertTextures))
+                    convertTexture = true;
+                else
+                    convertTexture = false;
+
+                ConsoleWriter.WriteInfoLine(string.Format("Convert Textures: {0}", convertTexture));
+
+                //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 10 TEXTURE EXPORT TYPE ||||||||||||||||||||||||||||||||||||
+                //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 10 TEXTURE EXPORT TYPE ||||||||||||||||||||||||||||||||||||
+                //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 10 TEXTURE EXPORT TYPE ||||||||||||||||||||||||||||||||||||
+
+                ConsoleWriter.WriteLine("(10/15) Converted Texture Format Type.");
+                ConsoleWriter.WriteLine("0 = .dds | 1 = .tga | 2 = .png | 3 = .jpg | 4 = .bmp");
+                ConsoleWriter.WriteLine("If you leave this empty it will revert to .png");
+                string userConvertedTextureFormatType = Console.ReadLine();
+
+                if (string.IsNullOrEmpty(userConvertedTextureFormatType) || string.IsNullOrWhiteSpace(userConvertedTextureFormatType))
+                    textureExportType = "png";
+                else
+                {
+                    if (int.TryParse(userConvertedTextureFormatType, out int parsedValue))
+                    {
+                        switch (parsedValue)
+                        {
+                            case 0:
+                                textureExportType = "dds";
+                                break;
+                            case 1:
+                                textureExportType = "tga";
+                                break;
+                            case 2:
+                                textureExportType = "png";
+                                break;
+                            case 3:
+                                textureExportType = "jpg";
+                                break;
+                            case 4:
+                                textureExportType = "bmp";
+                                break;
+                            default:
+                                textureExportType = "png";
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        textureExportType = "png";
+                    }
+                }
+
+                ConsoleWriter.WriteInfoLine(string.Format("Converted Texture Format Type: {0}", textureExportType));
+
+                //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 11 COMBINE ALBEDO AND ALPHA ||||||||||||||||||||||||||||||||||||
+                //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 11 COMBINE ALBEDO AND ALPHA ||||||||||||||||||||||||||||||||||||
+                //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 11 COMBINE ALBEDO AND ALPHA ||||||||||||||||||||||||||||||||||||
+
+                ConsoleWriter.WriteLine("(11/15) Combine Seperate Alpha and Albedo/Color textures together?");
+                ConsoleWriter.WriteLine("If YES hit enter now (leave the field empty)");
+                ConsoleWriter.WriteLine("If NO then type in 0");
+                string userCombineAlbedoAlpha = Console.ReadLine();
+
+                if (string.IsNullOrEmpty(userCombineAlbedoAlpha) || string.IsNullOrWhiteSpace(userCombineAlbedoAlpha))
+                    combineAlbedoAlpha = true;
+                else
+                    combineAlbedoAlpha = false;
+
+                ConsoleWriter.WriteInfoLine(string.Format("Combine Albedo Alpha: {0}", combineAlbedoAlpha));
+
+                //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 12 SEPERATE PBR MAPS ||||||||||||||||||||||||||||||||||||
+                //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 12 SEPERATE PBR MAPS ||||||||||||||||||||||||||||||||||||
+                //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 12 SEPERATE PBR MAPS ||||||||||||||||||||||||||||||||||||
+
+                ConsoleWriter.WriteLine("(12/15) Seperate the packed _MRV maps into seperate textures?");
+                ConsoleWriter.WriteLine("If YES hit enter now (leave the field empty)");
+                ConsoleWriter.WriteLine("If NO then type in 0");
+                string userSeperatePBRMaps = Console.ReadLine();
+
+                if (string.IsNullOrEmpty(userSeperatePBRMaps) || string.IsNullOrWhiteSpace(userSeperatePBRMaps))
+                    seperatePBRMaps = true;
+                else
+                    seperatePBRMaps = false;
+
+                ConsoleWriter.WriteInfoLine(string.Format("Seperate PBR Maps: {0}", seperatePBRMaps));
+
+                //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 13 UNITY HDRP MAPS ||||||||||||||||||||||||||||||||||||
+                //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 13 UNITY HDRP MAPS ||||||||||||||||||||||||||||||||||||
+                //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 13 UNITY HDRP MAPS ||||||||||||||||||||||||||||||||||||
+
+                ConsoleWriter.WriteLine("(13/15) Convert _MRV maps into Unity HDRP mask maps?");
+                ConsoleWriter.WriteLine("If YES hit enter now (leave the field empty)");
+                ConsoleWriter.WriteLine("If NO then type in 0");
+                string userConvertHDRP = Console.ReadLine();
+
+                if (string.IsNullOrEmpty(userConvertHDRP) || string.IsNullOrWhiteSpace(userConvertHDRP))
+                    convertPBRMapToUnityHDRP = true;
+                else
+                    convertPBRMapToUnityHDRP = false;
+
+                ConsoleWriter.WriteInfoLine(string.Format("Convert _MRV to Unity HDRP: {0}", convertPBRMapToUnityHDRP));
+
+                //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 14 UNITY URP MAPS ||||||||||||||||||||||||||||||||||||
+                //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 14 UNITY URP MAPS ||||||||||||||||||||||||||||||||||||
+                //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 14 UNITY URP MAPS ||||||||||||||||||||||||||||||||||||
+
+                ConsoleWriter.WriteLine("(14/15) Convert _MRV maps into Unity URP mask maps?");
+                ConsoleWriter.WriteLine("If YES hit enter now (leave the field empty)");
+                ConsoleWriter.WriteLine("If NO then type in 0");
+                string userConvertURP = Console.ReadLine();
+
+                if (string.IsNullOrEmpty(userConvertURP) || string.IsNullOrWhiteSpace(userConvertURP))
+                    convertPBRMapToUnityURP = true;
+                else
+                    convertPBRMapToUnityURP = false;
+
+                ConsoleWriter.WriteInfoLine(string.Format("Convert _MRV to Unity URP: {0}", convertPBRMapToUnityURP));
+
+                //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 15 UNITY BIRP MAPS ||||||||||||||||||||||||||||||||||||
+                //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 15 UNITY BIRP MAPS ||||||||||||||||||||||||||||||||||||
+                //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 15 UNITY BIRP MAPS ||||||||||||||||||||||||||||||||||||
+
+                ConsoleWriter.WriteLine("(15/15) Convert _MRV maps into Unity BIRP mask maps?");
+                ConsoleWriter.WriteLine("If YES hit enter now (leave the field empty)");
+                ConsoleWriter.WriteLine("If NO then type in 0");
+                string userConvertBIRP = Console.ReadLine();
+
+                if (string.IsNullOrEmpty(userConvertBIRP) || string.IsNullOrWhiteSpace(userConvertBIRP))
+                    convertPBRMapToUnityBIRP = true;
+                else
+                    convertPBRMapToUnityBIRP = false;
+
+                ConsoleWriter.WriteInfoLine(string.Format("Convert _MRV to Unity BIRP: {0}", convertPBRMapToUnityBIRP));
+            }
+            else
+            {
+                ConsoleWriter.WriteInfoLine("UMAP listing mode enabled, skipping rest of the options...");
+            }
+
+            //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI END ||||||||||||||||||||||||||||||||||||
+            //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI END ||||||||||||||||||||||||||||||||||||
+            //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI END ||||||||||||||||||||||||||||||||||||
+
+            ConsoleWriter.WriteInfoLine("STARTING MAP EXTRACTION...");
 
             //|||||||||||||||||||||||||||||||||||| CUE4 API SETUP ||||||||||||||||||||||||||||||||||||
             //|||||||||||||||||||||||||||||||||||| CUE4 API SETUP ||||||||||||||||||||||||||||||||||||
@@ -334,24 +697,30 @@ namespace UMapExporter
 
             CollectedData collectedData = new CollectedData(dataProvider, outputPath);
 
-
             //|||||||||||||||||||||||||||||||||||| COLLECT UMAP GAME FILE PATHS ||||||||||||||||||||||||||||||||||||
             //|||||||||||||||||||||||||||||||||||| COLLECT UMAP GAME FILE PATHS ||||||||||||||||||||||||||||||||||||
             //|||||||||||||||||||||||||||||||||||| COLLECT UMAP GAME FILE PATHS ||||||||||||||||||||||||||||||||||||
 
-            string[] gameUmapFiles = GetUMAPsInGame(collectedData);
-
-            ConsoleWriter.WriteInfoLine(string.Format("{0} .umap's in game", gameUmapFiles.Length));
-
-            //write a json file with all of the collected data and references
-            using (StreamWriter file = File.CreateText(string.Format("{0}/GameUMAPs.json", outputPath)))
+            if(mode_listUmaps)
             {
-                //get our json serializer
-                JsonSerializer serializer = new JsonSerializer();
+                string[] gameUmapFiles = GetUMAPsInGame(collectedData);
 
-                //serialize the data and write it to the configuration file
-                serializer.Formatting = Formatting.Indented;
-                serializer.Serialize(file, gameUmapFiles);
+                ConsoleWriter.WriteInfoLine(string.Format("{0} .umap's in game", gameUmapFiles.Length));
+
+                //write a json file with all of the collected data and references
+                using (StreamWriter file = File.CreateText(string.Format("{0}/GameUMAPs.json", outputPath)))
+                {
+                    //get our json serializer
+                    JsonSerializer serializer = new JsonSerializer();
+
+                    //serialize the data and write it to the configuration file
+                    serializer.Formatting = Formatting.Indented;
+                    serializer.Serialize(file, gameUmapFiles);
+                }
+
+                ConsoleWriter.WriteSuccessLine("Wrote JSON file with game umap files to output folder... {0}");
+
+                return;
             }
 
             //|||||||||||||||||||||||||||||||||||| FINDING GAME FILE ||||||||||||||||||||||||||||||||||||
