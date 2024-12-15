@@ -19,7 +19,7 @@ Once the map extraction is complete, a .json text file will be generated. This i
 
 ## Part 2 - Map Assembly (Unity Project)
 
-***NOTE: In the future this will be handled in the console app for simplicity. The map will be extracted and then assembled into an internal scene file using [Assimp.NET](https://github.com/StirlingLabs/Assimp.Net) library and exported into an fbx or gltf / glb that you can open in Blender or any other 3D software/game engine package. For prototyping the inital early version of this map extractor I am using [Unity](https://unity.com/).***
+***NOTE: In the future this will be handled in the console app for simplicity. The map will be extracted and then assembled into an internal scene file using [Assimp.NET](https://github.com/StirlingLabs/Assimp.Net) library and exported into an fbx or gltf / glb that you can open in Blender or any other 3D software/game engine package. For prototyping the inital early version of this map extractor I am using [Unity](https://unity.com/) at the moment.***
 
 The second part to the app is re-assembling the map based on what we extracted using that .json file as the base. Create a blank unity project and ***[drag the editor script here](https://github.com/frostbone25/FF7R-UMAP/blob/main/UnityEditorScript/CustomLevelImport.cs)*** into your Unity Assets folder for your created project.
 
