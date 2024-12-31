@@ -350,6 +350,8 @@ namespace UMapExporter
         {
             Console.Clear();
 
+            unrealEngineMappingFilePath = string.Format("{0}/ExternalDependencies/Mappings.usmap", Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
+
             //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 1 MODE SELECTION ||||||||||||||||||||||||||||||||||||
             //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 1 MODE SELECTION ||||||||||||||||||||||||||||||||||||
             //|||||||||||||||||||||||||||||||||||| CONSOLE APP UI - 1 MODE SELECTION ||||||||||||||||||||||||||||||||||||
