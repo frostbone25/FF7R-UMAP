@@ -5,7 +5,6 @@ using System.Reflection.Metadata;
 using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Security.Cryptography.X509Certificates;
 
 using CUE4Parse.Utils;
 using CUE4Parse.MappingsProvider;
